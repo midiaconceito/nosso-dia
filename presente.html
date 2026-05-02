@@ -1,0 +1,584 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Arquivo Confidencial - Caso 0305</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Share+Tech+Mono&family=Dancing+Script:wght@700&family=Poppins:wght@400;700&family=Special+Elite&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        body {
+            background-color: #050505;
+            color: #00ff41;
+            font-family: 'Share Tech Mono', monospace;
+            overflow: hidden;
+            touch-action: pan-y;
+        }
+        .romantic-text { font-family: 'Dancing Script', cursive; color: #ff3366; text-shadow: 0 0 10px rgba(255, 51, 102, 0.5); }
+        .body-text { font-family: 'Poppins', sans-serif; }
+        .typewriter-text { font-family: 'Special Elite', cursive; } 
+        
+        .level { display: none; width: 100%; height: 100%; flex-direction: column; align-items: center; justify-content: flex-start; text-align: center; }
+        .active-level { display: flex; animation: fadeIn 0.5s ease-out; }
+        
+        @keyframes fadeIn { from { opacity: 0; transform: scale(0.95); } to { opacity: 1; transform: scale(1); } }
+        @keyframes shake { 0%, 100% { transform: translateX(0); } 25% { transform: translateX(-10px); } 75% { transform: translateX(10px); } }
+        .shake-error { animation: shake 0.4s ease-in-out; border-color: red !important; color: red !important; }
+
+        #error-toast {
+            position: absolute; top: 60px; left: 50%; transform: translateX(-50%);
+            background-color: rgba(255, 0, 0, 0.9); border: 1px solid red; color: white;
+            padding: 8px 16px; border-radius: 8px; font-family: 'Poppins', sans-serif; font-size: 14px;
+            opacity: 0; pointer-events: none; transition: opacity 0.3s; z-index: 100; font-weight: bold;
+        }
+
+        /* Drag and Drop */
+        #dropzone { width: 100px; height: 100px; border: 2px dashed #00ff41; border-radius: 50%; display: none; align-items: center; justify-content: center; transition: all 0.3s; margin-top: 10px; }
+        #dragItem { width: 60px; height: 60px; background-color: #ff3366; border-radius: 50%; display: none; align-items: center; justify-content: center; font-size: 24px; position: absolute; bottom: 10%; box-shadow: 0 0 20px #ff3366; touch-action: none; z-index: 50; }
+
+        /* Estilos da Intro Documentário */
+        .polaroid { background: white; padding: 8px 8px 20px 8px; box-shadow: 0 4px 8px rgba(0,0,0,0.5); transform: rotate(-5deg); border: 1px solid #ccc; opacity: 0; transition: all 1s ease-in-out; }
+        .polaroid img { width: 100%; aspect-ratio: 3/4; object-fit: cover; border: 1px solid #333; filter: grayscale(50%) contrast(120%); }
+        .polaroid-caption { color: black; font-family: 'Special Elite', cursive; font-size: 12px; margin-top: 8px; text-align: center; font-weight: bold;}
+        
+        .intro-stamp { font-size: 2.5rem; color: red; border: 4px solid red; padding: 10px; transform: rotate(-15deg); opacity: 0; font-weight: bold; position: absolute; z-index: 20;}
+
+        #canvas-container { position: absolute; top: 0; left: 0; width: 100%; height: 100%; z-index: 0; background: #0a0005; }
+        #final-text { position: absolute; bottom: 10%; width: 100%; z-index: 10; opacity: 0; transition: opacity 2s; pointer-events: none;}
+
+        /* Scrollbar customizado */
+        .scrollable-content { overflow-y: auto; width: 100%; height: 100%; display: flex; flex-direction: column; }
+        .scrollable-content::-webkit-scrollbar { width: 0px; background: transparent; }
+    </style>
+</head>
+<body class="w-screen h-screen relative flex items-center justify-center p-2 sm:p-4">
+
+    <!-- ÁUDIOS -->
+    <video id="audio-intro" preload="auto" playsinline class="absolute w-[1px] h-[1px] opacity-0 pointer-events-none">
+        <source src="./intro.mp4" type="video/mp4">
+    </video>
+    
+    <audio id="audio-suspense" loop preload="auto">
+        <source src="./suspense.mpeg" type="audio/mpeg">
+        <source src="./suspense.mp3" type="audio/mpeg">
+    </audio>
+
+    <!-- TELA INICIAL -->
+    <div id="start-screen" class="absolute top-0 left-0 w-full h-full bg-black z-[100] flex flex-col items-center justify-center">
+        <i class="fas fa-fingerprint text-7xl text-gray-700 mb-6 animate-pulse"></i>
+        <h1 class="text-2xl typewriter-text text-white mb-8 tracking-widest text-center px-4">SISTEMA FORENSE</h1>
+        <button onclick="startApp()" class="border-2 border-[#00ff41] text-[#00ff41] px-8 py-3 rounded-md font-bold hover:bg-[#00ff41] hover:text-black transition-all shadow-[0_0_15px_#00ff41]">
+            INICIAR INVESTIGAÇÃO
+        </button>
+        <p class="text-xs text-gray-500 mt-4 text-center px-4">(Ligue o som do celular e aguarde carregar 🔊)</p>
+    </div>
+
+    <!-- TELA DE INTRODUÇÃO (AGORA COM SCROLL PERMITIDO) -->
+    <div id="intro-screen" class="hidden absolute top-0 left-0 w-full h-full bg-[#1a1a1a] z-[90] flex-col items-center justify-start p-4 overflow-y-auto" style="background-image: radial-gradient(circle, #2a2a2a 0%, #000000 100%);">
+        
+        <h2 id="intro-title" class="text-3xl text-red-600 font-bold tracking-widest typewriter-text mb-4 mt-6 opacity-0 transition-opacity duration-1000">DOSSIÊ DO SUSPEITO</h2>
+
+        <div class="relative w-full max-w-sm flex-1 flex flex-col items-center justify-center min-h-[400px]">
+            <!-- Polaroid 1 -->
+            <div id="polaroid-1" class="polaroid w-32 sm:w-40 absolute top-4 left-0 z-10 hidden">
+                <img src="./foto1.jpg" alt="Larissa Foto 1" onerror="this.onerror=null; this.src='./foto1.jpeg';">
+                <div class="polaroid-caption">Alvo Confirmado</div>
+            </div>
+
+            <!-- Polaroid 2 -->
+            <div id="polaroid-2" class="polaroid w-36 sm:w-48 absolute top-1/3 right-0 z-20 hidden" style="transform: rotate(8deg);">
+                <img src="./foto2.jpg" alt="Larissa Foto 2" onerror="this.onerror=null; this.src='./foto2.jpeg';">
+                <div class="polaroid-caption">Evidência Fissurada</div>
+            </div>
+            
+            <div id="stamp-confidential" class="intro-stamp top-1/2">CONFIDENCIAL</div>
+        </div>
+
+        <!-- Dados (Fluxo Relativo, empurra o botão para baixo) -->
+        <div id="intro-data" class="bg-black bg-opacity-70 p-4 sm:p-6 border border-gray-600 rounded w-full max-w-sm z-30 opacity-0 transition-opacity duration-1000 shadow-2xl mt-4">
+            <p class="typewriter-text text-white text-sm sm:text-lg mb-2">> NOME: <span class="text-[#00ff41]">LARISSA</span></p>
+            <p class="typewriter-text text-white text-sm sm:text-lg mb-2">> IDADE: <span class="text-[#00ff41]">17 ANOS</span></p>
+            <p class="typewriter-text text-white text-sm sm:text-lg mb-2">> PROF: <span class="text-[#00ff41]">FUTURA PERITA</span></p>
+            <p class="typewriter-text text-white text-sm sm:text-lg mt-4 border-t border-gray-600 pt-2">> STATUS: <span class="text-red-500 font-bold">NAMORADA DO KAUÃ</span></p>
+        </div>
+
+        <!-- Botão não está mais fixo no fundo, segue o fluxo! -->
+        <button id="btn-skip-intro" onclick="endIntro()" class="mt-6 mb-10 w-full max-w-xs border border-white text-white px-6 py-3 rounded font-bold opacity-0 transition-opacity duration-1000 z-50 hover:bg-white hover:text-black flex-shrink-0">
+            Acessar Sistema
+        </button>
+    </div>
+
+    <!-- SISTEMA PRINCIPAL -->
+    <div class="w-full h-full sm:h-[95vh] max-h-[850px] max-w-md bg-[#111] border border-green-900 rounded-xl sm:rounded-2xl shadow-[0_0_30px_rgba(0,255,65,0.15)] relative flex flex-col p-4 z-10" id="mainCard">
+
+        <!-- CABEÇALHO -->
+        <div class="border-b border-green-800 pb-2 flex justify-between items-center text-[10px] opacity-70 w-full flex-shrink-0">
+            <span class="w-1/3 text-left">DEP. FORENSE</span>
+            <span id="lives-container" class="w-1/3 text-center text-red-500 text-sm tracking-widest">❤️❤️❤️</span>
+            <span id="level-indicator" class="w-1/3 text-right">L1/10</span>
+        </div>
+
+        <div id="error-toast">Ops... evidência errada</div>
+
+        <!-- ÁREA DE ROLAGEM PRINCIPAL -->
+        <div class="flex-1 overflow-hidden relative mt-2">
+            
+            <div id="level-1" class="level active-level scrollable-content">
+                <div class="w-full flex flex-col items-center my-auto py-4">
+                    <i class="fas fa-fingerprint text-5xl mb-6 opacity-80"></i>
+                    <h2 class="text-xl mb-2 font-bold tracking-widest">ACESSO RESTRITO</h2>
+                    <p class="text-xs text-gray-400 mb-8 max-w-[250px]">Insira a data do crime passional para descriptografar os arquivos.</p>
+                    <input type="password" id="l1-input" class="bg-transparent border-b-2 border-green-800 text-center text-3xl py-2 w-32 focus:outline-none focus:border-[#00ff41] mb-8 tracking-widest">
+                    <button onclick="checkL1()" class="w-full bg-[#00ff41] text-black font-bold py-3 rounded hover:bg-green-400">Verificar Evidência</button>
+                </div>
+            </div>
+
+            <div id="level-2" class="level scrollable-content">
+                <div class="w-full flex flex-col items-center my-auto py-4">
+                    <h2 class="text-xl mb-6">EVIDÊNCIA #02</h2>
+                    <p class="text-xs text-gray-400 mb-6">O suspeito possui uma cor favorita. Selecione a correta para avançar.</p>
+                    <div class="grid grid-cols-2 gap-3 w-full mb-6">
+                        <button onclick="checkAnswer('azul', 'vermelho', this)" class="py-4 rounded border border-gray-600 bg-gray-900 text-gray-300 font-bold">Azul</button>
+                        <button onclick="checkAnswer('verde', 'vermelho', this)" class="py-4 rounded border border-gray-600 bg-gray-900 text-gray-300 font-bold">Verde</button>
+                        <button onclick="checkAnswer('vermelho', 'vermelho', this)" class="py-4 rounded border border-gray-600 bg-gray-900 text-gray-300 font-bold">Vermelho</button>
+                        <button onclick="checkAnswer('preto', 'vermelho', this)" class="py-4 rounded border border-gray-600 bg-gray-900 text-gray-300 font-bold">Preto</button>
+                    </div>
+                </div>
+            </div>
+
+            <div id="level-3" class="level scrollable-content">
+                <div class="w-full flex flex-col items-center my-auto py-4">
+                    <i class="fas fa-tshirt text-4xl mb-6 text-[#ff3366]"></i>
+                    <h2 class="text-xl mb-4">VESTUÁRIO DO SUSPEITO</h2>
+                    <p class="text-xs text-gray-400 mb-6">Qual foi o pijama utilizado na noite em que o coração foi roubado?</p>
+                    <div class="flex flex-col gap-3 w-full">
+                        <button onclick="checkAnswer('bolinha', 'melancia', this)" class="py-3 border border-gray-600 bg-gray-900 rounded">De Bolinha ⚪</button>
+                        <button onclick="checkAnswer('lua', 'melancia', this)" class="py-3 border border-gray-600 bg-gray-900 rounded">De Lua 🌙</button>
+                        <button onclick="checkAnswer('vestidinho', 'melancia', this)" class="py-3 border border-gray-600 bg-gray-900 rounded">Tipo Vestidinho 👗</button>
+                        <button onclick="checkAnswer('melancia', 'melancia', this)" class="py-3 border border-gray-600 bg-gray-900 rounded font-bold border-green-800 text-[#00ff41]">De Melancia 🍉</button>
+                    </div>
+                </div>
+            </div>
+
+            <div id="level-4" class="level scrollable-content">
+                <div class="w-full flex flex-col items-center my-auto py-4">
+                    <h2 class="text-xl mb-4">ANÁLISE LINGUÍSTICA</h2>
+                    <p class="text-xs text-gray-400 mb-6">Como o suspeito costuma se referir a você nas escutas telefônicas?</p>
+                    <div class="flex flex-col gap-3 w-full">
+                        <button onclick="checkAnswer('amor', 'minha mulher', this)" class="py-3 border border-gray-600 bg-gray-900 rounded">Amorzinho</button>
+                        <button onclick="checkAnswer('minha mulher', 'minha mulher', this)" class="py-3 border border-gray-600 bg-gray-900 rounded">Minha Mulher</button>
+                        <button onclick="checkAnswer('princesa', 'minha mulher', this)" class="py-3 border border-gray-600 bg-gray-900 rounded">Princesa</button>
+                        <button onclick="checkAnswer('linda', 'minha mulher', this)" class="py-3 border border-gray-600 bg-gray-900 rounded">Linda</button>
+                    </div>
+                </div>
+            </div>
+
+            <div id="level-5" class="level scrollable-content">
+                <div class="w-full flex flex-col items-center my-auto py-4">
+                    <i class="fas fa-heartbeat text-4xl mb-6 text-red-500"></i>
+                    <h2 class="text-xl mb-4">ALVO PRINCIPAL</h2>
+                    <p class="text-xs text-gray-400 mb-6">Insira o nome da pessoa mais importante na vida do suspeito.</p>
+                    <input type="text" id="l5-input" class="bg-transparent border-b-2 border-green-800 text-center text-xl py-2 w-full focus:outline-none focus:border-[#00ff41] mb-8 uppercase">
+                    <button onclick="checkL5()" class="w-full border border-[#00ff41] text-[#00ff41] py-3 rounded">Confirmar Identidade</button>
+                </div>
+            </div>
+
+            <div id="level-6" class="level relative w-full h-full overflow-hidden">
+                <div class="w-full flex flex-col items-center mt-4">
+                    <h2 class="text-xl mb-2">LOCAL DA CENA</h2>
+                    <p id="l6-instructions" class="text-xs text-gray-400 mb-6">A chave está escondida no escritório. Vasculhe os arquivos.</p>
+                    
+                    <div id="search-area" class="grid grid-cols-3 gap-2 w-full px-2 mb-2">
+                        <div onclick="findKey(false, this)" class="flex flex-col items-center justify-center border border-gray-600 py-4 rounded cursor-pointer bg-gray-800">
+                            <i class="fas fa-folder text-xl text-yellow-600 mb-1"></i>
+                            <span class="text-[10px]">Arq. A</span>
+                        </div>
+                        <div onclick="findKey(true, this)" class="flex flex-col items-center justify-center border border-gray-600 py-4 rounded cursor-pointer bg-gray-800">
+                            <i class="fas fa-folder text-xl text-yellow-600 mb-1"></i>
+                            <span class="text-[10px]">Arq. B</span>
+                        </div>
+                        <div onclick="findKey(false, this)" class="flex flex-col items-center justify-center border border-gray-600 py-4 rounded cursor-pointer bg-gray-800">
+                            <i class="fas fa-folder text-xl text-yellow-600 mb-1"></i>
+                            <span class="text-[10px]">Arq. C</span>
+                        </div>
+                    </div>
+
+                    <div id="dropzone" class="mx-auto mt-8">
+                        <i class="fas fa-lock text-4xl text-gray-600" id="lockIcon"></i>
+                    </div>
+                </div>
+
+                <div id="dragItem" style="left: 50%; transform: translateX(-50%);">
+                    <i class="fas fa-key text-white"></i>
+                </div>
+            </div>
+
+            <div id="level-7" class="level scrollable-content">
+                <div class="w-full flex flex-col items-center my-auto py-4">
+                    <h2 class="text-xl mb-4">ANÁLISE DE ROTINA</h2>
+                    <p class="text-xs text-gray-400 mb-6">O suspeito repete um padrão. Complete a frase:</p>
+                    
+                    <div class="text-[14px] mb-6 font-bold text-white bg-gray-900 p-4 rounded-lg w-full border border-gray-700 text-center">
+                        "Amor, deixa eu <span class="border-b-2 border-[#ff3366] text-[#ff3366] px-1">_______</span>"
+                    </div>
+
+                    <div class="flex flex-col gap-3 w-full">
+                        <button onclick="checkAnswer('calcinha', 'calcinha', this)" class="py-3 bg-gray-800 border border-gray-600 rounded text-sm">1. Ver sua calcinha</button>
+                        <button onclick="checkAnswer('perguntar', 'calcinha', this)" class="py-3 bg-gray-800 border border-gray-600 rounded text-sm">2. Te perguntar uma coisa</button>
+                        <button onclick="checkAnswer('rapidao', 'calcinha', this)" class="py-3 bg-gray-800 border border-gray-600 rounded text-sm">3. Ir ali rapidinho</button>
+                    </div>
+                </div>
+            </div>
+
+            <div id="level-8" class="level scrollable-content">
+                <div class="w-full flex flex-col items-center my-auto py-4">
+                    <h2 class="romantic-text text-3xl mb-4">Minha Perita...</h2>
+                    
+                    <div class="w-full bg-gray-900 rounded-lg overflow-hidden border-2 border-[#ff3366] mb-4 relative flex-shrink-0" style="aspect-ratio: 9/16; max-height: 40vh;">
+                        <video id="myVideo" src="./video.mp4" class="w-full h-full object-cover" playsinline></video>
+                        <div id="videoOverlay" onclick="playVideo()" class="absolute inset-0 bg-black bg-opacity-50 flex items-center justify-center cursor-pointer">
+                            <i class="fas fa-play-circle text-6xl text-white opacity-80 hover:scale-110 transition-transform"></i>
+                        </div>
+                    </div>
+
+                    <p class="body-text text-xs text-gray-300 italic mb-6 px-2 leading-tight">"Ver você sorrir assim é a minha maior evidência de que eu fiz a escolha certa."</p>
+                    <button onclick="changeLevel(9)" class="w-full bg-[#ff3366] text-white py-3 rounded font-bold">Avançar <i class="fas fa-arrow-right"></i></button>
+                </div>
+            </div>
+
+            <div id="level-9" class="level scrollable-content">
+                <div class="w-full flex flex-col items-center my-auto py-4">
+                    <i class="fas fa-calendar-check text-5xl mb-6 text-[#00ff41]"></i>
+                    <h2 class="text-xl mb-4 font-bold uppercase text-white">Relatório Final</h2>
+                    <div class="body-text text-sm sm:text-base text-gray-300 space-y-4 text-justify px-2 leading-relaxed">
+                        <p>Foram 4 anos construindo a nossa história até chegar no dia de hoje.</p>
+                        <p>Obrigado por existir na minha vida durante todo esse tempo e por finalmente aceitar ter essa data comigo, pela primeira vez, depois de tanto esperar.</p>
+                        <p>Eu te amo incondicionalmente, Larissa. E estarei do seu lado enquanto você realiza seu sonho de ser perita criminal.</p>
+                    </div>
+                    <button onclick="startFinalCanvas()" class="mt-8 w-full border-2 border-[#00ff41] text-[#00ff41] py-3 rounded font-bold hover:bg-[#00ff41] hover:text-black transition-colors">Concluir Caso</button>
+                </div>
+            </div>
+
+            <div id="level-gameover" class="level scrollable-content">
+                <div class="w-full flex flex-col items-center my-auto py-4">
+                    <i class="fas fa-user-lock text-6xl text-red-600 mb-6"></i>
+                    <h2 class="text-xl sm:text-2xl mb-4 font-bold text-red-500 uppercase tracking-widest">Acesso Bloqueado</h2>
+                    <div class="body-text text-xs sm:text-sm text-gray-300 text-center px-2 leading-relaxed mb-8">
+                        <p>Ops... você perdeu todas as tentativas.</p>
+                        <p class="mt-4 italic text-gray-400">Respire fundo, tente novamente e com calma. Uma perita tão boa como você não deixa o nervosismo vencer!</p>
+                    </div>
+                    <button onclick="restartGame()" class="w-full border-2 border-red-500 text-red-500 py-3 rounded font-bold hover:bg-red-500 hover:text-white transition-colors">Iniciar Nova Perícia</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- FASE 10: O CANVAS -->
+    <div id="level-10" class="level absolute top-0 left-0 w-full h-full bg-black z-[200]">
+        <canvas id="canvas-container"></canvas>
+        <div id="final-text" class="text-center w-full px-4">
+            <h1 class="romantic-text text-4xl sm:text-5xl mb-2">Te amo!</h1>
+            <p class="body-text text-md sm:text-lg text-white font-bold tracking-widest uppercase">Feliz Nosso Dia</p>
+        </div>
+    </div>
+
+    <script>
+        const audioIntro = document.getElementById('audio-intro');
+        const audioSuspense = document.getElementById('audio-suspense');
+
+        function startApp() {
+            document.getElementById('start-screen').style.display = 'none';
+            audioIntro.play().catch(e => {
+                console.log("Aviso Sênior: O áudio não pôde ser reproduzido. Verifique se o arquivo intro.mp4 está na pasta correta.");
+            });
+            runIntroSequence();
+        }
+
+        function runIntroSequence() {
+            const introScreen = document.getElementById('intro-screen');
+            introScreen.style.display = 'flex';
+
+            setTimeout(() => { document.getElementById('intro-title').style.opacity = '1'; }, 500);
+            
+            setTimeout(() => { 
+                const p1 = document.getElementById('polaroid-1');
+                p1.style.display = 'block';
+                setTimeout(() => p1.style.opacity = '1', 50);
+            }, 2000);
+
+            setTimeout(() => { 
+                const p2 = document.getElementById('polaroid-2');
+                p2.style.display = 'block';
+                setTimeout(() => p2.style.opacity = '1', 50);
+            }, 3500);
+
+            setTimeout(() => { document.getElementById('intro-data').style.opacity = '1'; }, 5000);
+            setTimeout(() => { document.getElementById('stamp-confidential').style.opacity = '1'; }, 6500);
+            setTimeout(() => { document.getElementById('btn-skip-intro').style.opacity = '1'; }, 8000);
+        }
+
+        function endIntro() {
+            audioIntro.pause();
+            audioSuspense.play().catch(e => {
+                console.log("Aviso Sênior: O áudio suspense não pôde ser reproduzido. Verifique o arquivo suspense.mp3.");
+            });
+            document.getElementById('intro-screen').style.display = 'none';
+        }
+
+        function playVideo() {
+            const video = document.getElementById('myVideo');
+            const overlay = document.getElementById('videoOverlay');
+            video.controls = true; 
+            video.play().catch(e => console.log("O vídeo não pôde ser reproduzido. Verifique o arquivo video.mp4."));
+            overlay.style.display = 'none'; 
+        }
+
+        let currentLevel = 1;
+        let vidas = 3;
+
+        function updateLivesUI() {
+            const container = document.getElementById('lives-container');
+            let coracoes = '';
+            for(let i=0; i<vidas; i++) coracoes += '❤️';
+            for(let i=vidas; i<3; i++) coracoes += '🖤'; 
+            container.innerText = coracoes;
+        }
+
+        function triggerError(el) {
+            shakeElement(el);
+            vidas--;
+            updateLivesUI();
+
+            const toast = document.getElementById('error-toast');
+            toast.style.opacity = '1';
+            setTimeout(() => toast.style.opacity = '0', 2000);
+
+            if(vidas <= 0) {
+                setTimeout(() => changeLevel('gameover'), 800);
+            }
+        }
+
+        function restartGame() {
+            vidas = 3;
+            updateLivesUI();
+            document.getElementById('l1-input').value = '';
+            document.getElementById('l5-input').value = '';
+            
+            document.getElementById('search-area').style.display = 'grid';
+            document.getElementById('dragItem').style.display = 'none';
+            document.getElementById('dropzone').style.display = 'none';
+            document.getElementById('l6-instructions').innerText = "A chave está escondida no escritório. Vasculhe os arquivos.";
+            document.getElementById('dropzone').style.borderColor = '#00ff41';
+            const lockIcon = document.getElementById('lockIcon');
+            lockIcon.className = 'fas fa-lock text-4xl text-gray-600';
+            document.getElementById('dragItem').style.transform = 'translate(-50%, 0)';
+
+            const folders = document.getElementById('search-area').children;
+            for(let i=0; i<folders.length; i++) folders[i].style.opacity = '1';
+
+            changeLevel(1);
+        }
+
+        function checkAnswer(resposta, correta, btn) {
+            if (resposta === correta) { changeLevel(currentLevel + 1); } 
+            else { triggerError(btn); }
+        }
+
+        function changeLevel(newLevel) {
+            document.querySelectorAll('.level').forEach(el => el.classList.remove('active-level'));
+            document.getElementById(`level-${newLevel}`).classList.add('active-level');
+            
+            if(newLevel !== 'gameover' && newLevel !== 10) {
+                document.getElementById('level-indicator').innerText = `L${newLevel}/10`;
+            }
+            currentLevel = typeof newLevel === 'number' ? newLevel : currentLevel;
+        }
+
+        function shakeElement(el) {
+            el.classList.add('shake-error');
+            setTimeout(() => el.classList.remove('shake-error'), 400);
+        }
+
+        function checkL1() {
+            const val = document.getElementById('l1-input').value;
+            if (val === '0305' || val === '305' || val.includes('0305')) changeLevel(2);
+            else triggerError(document.getElementById('l1-input'));
+        }
+
+        function checkL5() {
+            const val = document.getElementById('l5-input').value.toLowerCase().trim();
+            if (val.includes('larissa') || val === 'eu' || val.includes('mulher') || val.includes('lari')) {
+                changeLevel(6);
+            } else { triggerError(document.getElementById('l5-input')); }
+        }
+
+        function findKey(isCorrect, folderDiv) {
+            if(isCorrect) {
+                document.getElementById('search-area').style.display = 'none';
+                document.getElementById('l6-instructions').innerText = "Excelente! Arraste a chave até a fechadura.";
+                document.getElementById('dropzone').style.display = 'flex';
+                document.getElementById('dragItem').style.display = 'flex';
+                setupDragAndDrop();
+            } else {
+                triggerError(folderDiv);
+                folderDiv.style.opacity = '0.3'; 
+            }
+        }
+
+        function setupDragAndDrop() {
+            const dragItem = document.getElementById('dragItem');
+            const dropzone = document.getElementById('dropzone');
+            const lockIcon = document.getElementById('lockIcon');
+            let isDragging = false;
+            let startY, startX;
+
+            const handleStart = (e) => {
+                isDragging = true;
+                startX = e.touches ? e.touches[0].clientX : e.clientX;
+                startY = e.touches ? e.touches[0].clientY : e.clientY;
+                dragItem.style.transition = 'none';
+            };
+
+            const handleMove = (e) => {
+                if (!isDragging) return;
+                e.preventDefault(); 
+                const clientX = e.touches ? e.touches[0].clientX : e.clientX;
+                const clientY = e.touches ? e.touches[0].clientY : e.clientY;
+                
+                const deltaX = clientX - startX;
+                const deltaY = clientY - startY;
+                dragItem.style.transform = `translate(calc(-50% + ${deltaX}px), ${deltaY}px)`;
+
+                const dragRect = dragItem.getBoundingClientRect();
+                const dropRect = dropzone.getBoundingClientRect();
+
+                if (dragRect.left < dropRect.right && dragRect.right > dropRect.left && dragRect.top < dropRect.bottom && dragRect.bottom > dropRect.top) {
+                    dropzone.style.borderColor = '#ff3366';
+                    lockIcon.className = 'fas fa-lock-open text-4xl text-[#ff3366]';
+                } else {
+                    dropzone.style.borderColor = '#00ff41';
+                    lockIcon.className = 'fas fa-lock text-4xl text-gray-600';
+                }
+            };
+
+            const handleEnd = () => {
+                if (!isDragging) return;
+                isDragging = false;
+                dragItem.style.transition = 'transform 0.3s ease-out';
+                
+                const dragRect = dragItem.getBoundingClientRect();
+                const dropRect = dropzone.getBoundingClientRect();
+
+                if (dragRect.left < dropRect.right && dragRect.right > dropRect.left && dragRect.top < dropRect.bottom && dragRect.bottom > dropRect.top) {
+                    dragItem.style.display = 'none';
+                    setTimeout(() => changeLevel(7), 500);
+                } else {
+                    dragItem.style.transform = 'translate(-50%, 0)';
+                }
+            };
+
+            dragItem.addEventListener('touchstart', handleStart);
+            document.getElementById('level-6').addEventListener('touchmove', handleMove, {passive: false});
+            document.getElementById('level-6').addEventListener('touchend', handleEnd);
+            dragItem.addEventListener('mousedown', handleStart);
+            document.getElementById('level-6').addEventListener('mousemove', handleMove);
+            document.getElementById('level-6').addEventListener('mouseup', handleEnd);
+        }
+
+        function startFinalCanvas() {
+            audioSuspense.pause();
+
+            changeLevel(10);
+            const canvas = document.getElementById('canvas-container');
+            const ctx = canvas.getContext('2d');
+            
+            canvas.width = window.innerWidth;
+            canvas.height = window.innerHeight;
+
+            let particles = [];
+
+            function getHeartPoint(t, scale) {
+                const x = 16 * Math.pow(Math.sin(t), 3);
+                const y = -(13 * Math.cos(t) - 5 * Math.cos(2*t) - 2 * Math.cos(3*t) - Math.cos(4*t));
+                return { x: x * scale + canvas.width/2, y: y * scale + canvas.height/2 - 50 };
+            }
+
+            let targetPoints = [];
+            for(let i = 0; i < Math.PI * 2; i += 0.05) {
+                targetPoints.push(getHeartPoint(i, window.innerWidth < 400 ? 8 : 12));
+            }
+
+            class Particle {
+                constructor() {
+                    this.x = Math.random() * canvas.width;
+                    this.y = Math.random() * canvas.height;
+                    this.size = Math.random() * 2 + 1;
+                    this.color = '#ff3366';
+                    this.target = targetPoints[Math.floor(Math.random() * targetPoints.length)];
+                    this.vx = 0;
+                    this.vy = 0;
+                }
+                update() {
+                    const dx = this.target.x - this.x;
+                    const dy = this.target.y - this.y;
+                    this.vx += dx * 0.001; 
+                    this.vy += dy * 0.001;
+                    this.vx *= 0.92;
+                    this.vy *= 0.92;
+                    this.x += this.vx;
+                    this.y += this.vy;
+                }
+                draw() {
+                    ctx.fillStyle = this.color;
+                    ctx.beginPath();
+                    ctx.arc(this.x, this.y, this.size, 0, Math.PI * 2);
+                    ctx.fill();
+                }
+            }
+
+            for(let i = 0; i < 400; i++) particles.push(new Particle());
+
+            function animate() {
+                ctx.fillStyle = 'rgba(10, 0, 5, 0.2)';
+                ctx.fillRect(0, 0, canvas.width, canvas.height);
+                particles.forEach(p => { p.update(); p.draw(); });
+                requestAnimationFrame(animate);
+            }
+
+            animate();
+
+            setTimeout(() => {
+                const textCanvas = document.createElement('canvas');
+                textCanvas.width = canvas.width;
+                textCanvas.height = canvas.height;
+                const textCtx = textCanvas.getContext('2d');
+                let fontSize = window.innerWidth < 400 ? 40 : 60;
+                textCtx.font = `bold ${fontSize}px 'Poppins', sans-serif`;
+                textCtx.fillStyle = "white";
+                textCtx.textAlign = "center";
+                textCtx.fillText("LARISSA", canvas.width/2, canvas.height/2 - 50);
+
+                const imgData = textCtx.getImageData(0, 0, canvas.width, canvas.height).data;
+                let textPoints = [];
+                for(let y = 0; y < canvas.height; y += 4) {
+                    for(let x = 0; x < canvas.width; x += 4) {
+                        if(imgData[(y * canvas.width + x) * 4 + 3] > 128) { textPoints.push({x, y}); }
+                    }
+                }
+
+                particles.forEach((p, index) => {
+                    if(textPoints.length > 0) {
+                        p.target = textPoints[index % textPoints.length];
+                        p.color = '#ffffff'; 
+                        p.vx = (Math.random() - 0.5) * 50;
+                        p.vy = (Math.random() - 0.5) * 50;
+                    }
+                });
+
+                document.getElementById('final-text').style.opacity = '1';
+            }, 4500); 
+        }
+    </script>
+</body>
+</html>
