@@ -13,14 +13,15 @@
             color: #00ff41;
             font-family: 'Share Tech Mono', monospace;
             overflow: hidden;
-            touch-action: pan-y;
         }
         .romantic-text { font-family: 'Dancing Script', cursive; color: #ff3366; text-shadow: 0 0 10px rgba(255, 51, 102, 0.5); }
         .body-text { font-family: 'Poppins', sans-serif; }
         .typewriter-text { font-family: 'Special Elite', cursive; } 
         
         .level { display: none; width: 100%; height: 100%; flex-direction: column; align-items: center; justify-content: flex-start; text-align: center; }
-        .active-level { display: flex; animation: fadeIn 0.5s ease-out; }
+        
+        /* O SUPERPODER: O !important garante que o JS tenha controle absoluto sobre quem aparece */
+        .active-level { display: flex !important; animation: fadeIn 0.5s ease-out; }
         
         @keyframes fadeIn { from { opacity: 0; transform: scale(0.95); } to { opacity: 1; transform: scale(1); } }
         @keyframes shake { 0%, 100% { transform: translateX(0); } 25% { transform: translateX(-10px); } 75% { transform: translateX(10px); } }
@@ -47,8 +48,8 @@
         #canvas-container { position: absolute; top: 0; left: 0; width: 100%; height: 100%; z-index: 0; background: #0a0005; }
         #final-text { position: absolute; bottom: 10%; width: 100%; z-index: 10; opacity: 0; transition: opacity 2s; pointer-events: none;}
 
-        /* Scrollbar customizado */
-        .scrollable-content { overflow-y: auto; width: 100%; height: 100%; display: flex; flex-direction: column; }
+        /* CORREÇÃO DO BUG IMORTAL: Removido o display:flex fixo daqui. Agora ele obedece ao .level e ao .active-level corretamente. */
+        .scrollable-content { overflow-y: auto; width: 100%; height: 100%; padding-bottom: 20px;}
         .scrollable-content::-webkit-scrollbar { width: 0px; background: transparent; }
     </style>
 </head>
@@ -68,13 +69,13 @@
     <div id="start-screen" class="absolute top-0 left-0 w-full h-full bg-black z-[100] flex flex-col items-center justify-center">
         <i class="fas fa-fingerprint text-7xl text-gray-700 mb-6 animate-pulse"></i>
         <h1 class="text-2xl typewriter-text text-white mb-8 tracking-widest text-center px-4">SISTEMA FORENSE</h1>
-        <button onclick="startApp()" class="border-2 border-[#00ff41] text-[#00ff41] px-8 py-3 rounded-md font-bold hover:bg-[#00ff41] hover:text-black transition-all shadow-[0_0_15px_#00ff41]">
+        <button type="button" onclick="startApp()" class="border-2 border-[#00ff41] text-[#00ff41] px-8 py-3 rounded-md font-bold hover:bg-[#00ff41] hover:text-black transition-all shadow-[0_0_15px_#00ff41]">
             INICIAR INVESTIGAÇÃO
         </button>
         <p class="text-xs text-gray-500 mt-4 text-center px-4">(Ligue o som do celular e aguarde carregar 🔊)</p>
     </div>
 
-    <!-- TELA DE INTRODUÇÃO (AGORA COM SCROLL PERMITIDO) -->
+    <!-- TELA DE INTRODUÇÃO -->
     <div id="intro-screen" class="hidden absolute top-0 left-0 w-full h-full bg-[#1a1a1a] z-[90] flex-col items-center justify-start p-4 overflow-y-auto" style="background-image: radial-gradient(circle, #2a2a2a 0%, #000000 100%);">
         
         <h2 id="intro-title" class="text-3xl text-red-600 font-bold tracking-widest typewriter-text mb-4 mt-6 opacity-0 transition-opacity duration-1000">DOSSIÊ DO SUSPEITO</h2>
@@ -95,7 +96,6 @@
             <div id="stamp-confidential" class="intro-stamp top-1/2">CONFIDENCIAL</div>
         </div>
 
-        <!-- Dados (Fluxo Relativo, empurra o botão para baixo) -->
         <div id="intro-data" class="bg-black bg-opacity-70 p-4 sm:p-6 border border-gray-600 rounded w-full max-w-sm z-30 opacity-0 transition-opacity duration-1000 shadow-2xl mt-4">
             <p class="typewriter-text text-white text-sm sm:text-lg mb-2">> NOME: <span class="text-[#00ff41]">LARISSA</span></p>
             <p class="typewriter-text text-white text-sm sm:text-lg mb-2">> IDADE: <span class="text-[#00ff41]">17 ANOS</span></p>
@@ -103,8 +103,7 @@
             <p class="typewriter-text text-white text-sm sm:text-lg mt-4 border-t border-gray-600 pt-2">> STATUS: <span class="text-red-500 font-bold">NAMORADA DO KAUÃ</span></p>
         </div>
 
-        <!-- Botão não está mais fixo no fundo, segue o fluxo! -->
-        <button id="btn-skip-intro" onclick="endIntro()" class="mt-6 mb-10 w-full max-w-xs border border-white text-white px-6 py-3 rounded font-bold opacity-0 transition-opacity duration-1000 z-50 hover:bg-white hover:text-black flex-shrink-0">
+        <button type="button" id="btn-skip-intro" onclick="endIntro()" class="mt-6 mb-10 w-full max-w-xs border border-white text-white px-6 py-3 rounded font-bold opacity-0 transition-opacity duration-1000 z-50 hover:bg-white hover:text-black flex-shrink-0">
             Acessar Sistema
         </button>
     </div>
@@ -125,67 +124,67 @@
         <div class="flex-1 overflow-hidden relative mt-2">
             
             <div id="level-1" class="level active-level scrollable-content">
-                <div class="w-full flex flex-col items-center my-auto py-4">
+                <div class="w-full flex flex-col items-center pt-8 pb-4">
                     <i class="fas fa-fingerprint text-5xl mb-6 opacity-80"></i>
                     <h2 class="text-xl mb-2 font-bold tracking-widest">ACESSO RESTRITO</h2>
                     <p class="text-xs text-gray-400 mb-8 max-w-[250px]">Insira a data do crime passional para descriptografar os arquivos.</p>
-                    <input type="password" id="l1-input" class="bg-transparent border-b-2 border-green-800 text-center text-3xl py-2 w-32 focus:outline-none focus:border-[#00ff41] mb-8 tracking-widest">
-                    <button onclick="checkL1()" class="w-full bg-[#00ff41] text-black font-bold py-3 rounded hover:bg-green-400">Verificar Evidência</button>
+                    <input type="password" id="l1-input" onkeydown="if(event.key === 'Enter'){ event.preventDefault(); checkL1(); }" class="bg-transparent border-b-2 border-green-800 text-center text-3xl py-2 w-32 focus:outline-none focus:border-[#00ff41] mb-8 tracking-widest">
+                    <button type="button" onclick="checkL1()" class="w-full bg-[#00ff41] text-black font-bold py-3 rounded hover:bg-green-400">Verificar Evidência</button>
                 </div>
             </div>
 
             <div id="level-2" class="level scrollable-content">
-                <div class="w-full flex flex-col items-center my-auto py-4">
+                <div class="w-full flex flex-col items-center pt-8 pb-4">
                     <h2 class="text-xl mb-6">EVIDÊNCIA #02</h2>
                     <p class="text-xs text-gray-400 mb-6">O suspeito possui uma cor favorita. Selecione a correta para avançar.</p>
                     <div class="grid grid-cols-2 gap-3 w-full mb-6">
-                        <button onclick="checkAnswer('azul', 'vermelho', this)" class="py-4 rounded border border-gray-600 bg-gray-900 text-gray-300 font-bold">Azul</button>
-                        <button onclick="checkAnswer('verde', 'vermelho', this)" class="py-4 rounded border border-gray-600 bg-gray-900 text-gray-300 font-bold">Verde</button>
-                        <button onclick="checkAnswer('vermelho', 'vermelho', this)" class="py-4 rounded border border-gray-600 bg-gray-900 text-gray-300 font-bold">Vermelho</button>
-                        <button onclick="checkAnswer('preto', 'vermelho', this)" class="py-4 rounded border border-gray-600 bg-gray-900 text-gray-300 font-bold">Preto</button>
+                        <button type="button" onclick="checkAnswer('azul', 'vermelho', this)" class="py-4 rounded border border-gray-600 bg-gray-900 text-gray-300 font-bold">Azul</button>
+                        <button type="button" onclick="checkAnswer('verde', 'vermelho', this)" class="py-4 rounded border border-gray-600 bg-gray-900 text-gray-300 font-bold">Verde</button>
+                        <button type="button" onclick="checkAnswer('vermelho', 'vermelho', this)" class="py-4 rounded border border-gray-600 bg-gray-900 text-gray-300 font-bold">Vermelho</button>
+                        <button type="button" onclick="checkAnswer('preto', 'vermelho', this)" class="py-4 rounded border border-gray-600 bg-gray-900 text-gray-300 font-bold">Preto</button>
                     </div>
                 </div>
             </div>
 
             <div id="level-3" class="level scrollable-content">
-                <div class="w-full flex flex-col items-center my-auto py-4">
+                <div class="w-full flex flex-col items-center pt-8 pb-4">
                     <i class="fas fa-tshirt text-4xl mb-6 text-[#ff3366]"></i>
                     <h2 class="text-xl mb-4">VESTUÁRIO DO SUSPEITO</h2>
                     <p class="text-xs text-gray-400 mb-6">Qual foi o pijama utilizado na noite em que o coração foi roubado?</p>
                     <div class="flex flex-col gap-3 w-full">
-                        <button onclick="checkAnswer('bolinha', 'melancia', this)" class="py-3 border border-gray-600 bg-gray-900 rounded">De Bolinha ⚪</button>
-                        <button onclick="checkAnswer('lua', 'melancia', this)" class="py-3 border border-gray-600 bg-gray-900 rounded">De Lua 🌙</button>
-                        <button onclick="checkAnswer('vestidinho', 'melancia', this)" class="py-3 border border-gray-600 bg-gray-900 rounded">Tipo Vestidinho 👗</button>
-                        <button onclick="checkAnswer('melancia', 'melancia', this)" class="py-3 border border-gray-600 bg-gray-900 rounded font-bold border-green-800 text-[#00ff41]">De Melancia 🍉</button>
+                        <button type="button" onclick="checkAnswer('bolinha', 'melancia', this)" class="py-3 border border-gray-600 bg-gray-900 rounded">De Bolinha ⚪</button>
+                        <button type="button" onclick="checkAnswer('lua', 'melancia', this)" class="py-3 border border-gray-600 bg-gray-900 rounded">De Lua 🌙</button>
+                        <button type="button" onclick="checkAnswer('vestidinho', 'melancia', this)" class="py-3 border border-gray-600 bg-gray-900 rounded">Tipo Vestidinho 👗</button>
+                        <button type="button" onclick="checkAnswer('melancia', 'melancia', this)" class="py-3 border border-gray-600 bg-gray-900 rounded font-bold border-green-800 text-[#00ff41]">De Melancia 🍉</button>
                     </div>
                 </div>
             </div>
 
             <div id="level-4" class="level scrollable-content">
-                <div class="w-full flex flex-col items-center my-auto py-4">
+                <div class="w-full flex flex-col items-center pt-8 pb-4">
                     <h2 class="text-xl mb-4">ANÁLISE LINGUÍSTICA</h2>
                     <p class="text-xs text-gray-400 mb-6">Como o suspeito costuma se referir a você nas escutas telefônicas?</p>
                     <div class="flex flex-col gap-3 w-full">
-                        <button onclick="checkAnswer('amor', 'minha mulher', this)" class="py-3 border border-gray-600 bg-gray-900 rounded">Amorzinho</button>
-                        <button onclick="checkAnswer('minha mulher', 'minha mulher', this)" class="py-3 border border-gray-600 bg-gray-900 rounded">Minha Mulher</button>
-                        <button onclick="checkAnswer('princesa', 'minha mulher', this)" class="py-3 border border-gray-600 bg-gray-900 rounded">Princesa</button>
-                        <button onclick="checkAnswer('linda', 'minha mulher', this)" class="py-3 border border-gray-600 bg-gray-900 rounded">Linda</button>
+                        <button type="button" onclick="checkAnswer('amor', 'minha mulher', this)" class="py-3 border border-gray-600 bg-gray-900 rounded">Amorzinho</button>
+                        <button type="button" onclick="checkAnswer('minha mulher', 'minha mulher', this)" class="py-3 border border-gray-600 bg-gray-900 rounded">Minha Mulher</button>
+                        <button type="button" onclick="checkAnswer('princesa', 'minha mulher', this)" class="py-3 border border-gray-600 bg-gray-900 rounded">Princesa</button>
+                        <button type="button" onclick="checkAnswer('linda', 'minha mulher', this)" class="py-3 border border-gray-600 bg-gray-900 rounded">Linda</button>
                     </div>
                 </div>
             </div>
 
             <div id="level-5" class="level scrollable-content">
-                <div class="w-full flex flex-col items-center my-auto py-4">
+                <div class="w-full flex flex-col items-center pt-8 pb-4">
                     <i class="fas fa-heartbeat text-4xl mb-6 text-red-500"></i>
                     <h2 class="text-xl mb-4">ALVO PRINCIPAL</h2>
                     <p class="text-xs text-gray-400 mb-6">Insira o nome da pessoa mais importante na vida do suspeito.</p>
-                    <input type="text" id="l5-input" class="bg-transparent border-b-2 border-green-800 text-center text-xl py-2 w-full focus:outline-none focus:border-[#00ff41] mb-8 uppercase">
-                    <button onclick="checkL5()" class="w-full border border-[#00ff41] text-[#00ff41] py-3 rounded">Confirmar Identidade</button>
+                    <input type="text" id="l5-input" onkeydown="if(event.key === 'Enter'){ event.preventDefault(); checkL5(); }" class="bg-transparent border-b-2 border-green-800 text-center text-xl py-2 w-full focus:outline-none focus:border-[#00ff41] mb-8 uppercase">
+                    <button type="button" onclick="checkL5()" class="w-full border border-[#00ff41] text-[#00ff41] py-3 rounded">Confirmar Identidade</button>
                 </div>
             </div>
 
             <div id="level-6" class="level relative w-full h-full overflow-hidden">
-                <div class="w-full flex flex-col items-center mt-4">
+                <div class="w-full flex flex-col items-center mt-6">
                     <h2 class="text-xl mb-2">LOCAL DA CENA</h2>
                     <p id="l6-instructions" class="text-xs text-gray-400 mb-6">A chave está escondida no escritório. Vasculhe os arquivos.</p>
                     
@@ -215,7 +214,7 @@
             </div>
 
             <div id="level-7" class="level scrollable-content">
-                <div class="w-full flex flex-col items-center my-auto py-4">
+                <div class="w-full flex flex-col items-center pt-8 pb-4">
                     <h2 class="text-xl mb-4">ANÁLISE DE ROTINA</h2>
                     <p class="text-xs text-gray-400 mb-6">O suspeito repete um padrão. Complete a frase:</p>
                     
@@ -224,15 +223,15 @@
                     </div>
 
                     <div class="flex flex-col gap-3 w-full">
-                        <button onclick="checkAnswer('calcinha', 'calcinha', this)" class="py-3 bg-gray-800 border border-gray-600 rounded text-sm">1. Ver sua calcinha</button>
-                        <button onclick="checkAnswer('perguntar', 'calcinha', this)" class="py-3 bg-gray-800 border border-gray-600 rounded text-sm">2. Te perguntar uma coisa</button>
-                        <button onclick="checkAnswer('rapidao', 'calcinha', this)" class="py-3 bg-gray-800 border border-gray-600 rounded text-sm">3. Ir ali rapidinho</button>
+                        <button type="button" onclick="checkAnswer('calcinha', 'calcinha', this)" class="py-3 bg-gray-800 border border-gray-600 rounded text-sm">1. Ver sua calcinha</button>
+                        <button type="button" onclick="checkAnswer('perguntar', 'calcinha', this)" class="py-3 bg-gray-800 border border-gray-600 rounded text-sm">2. Te perguntar uma coisa</button>
+                        <button type="button" onclick="checkAnswer('rapidao', 'calcinha', this)" class="py-3 bg-gray-800 border border-gray-600 rounded text-sm">3. Ir ali rapidinho</button>
                     </div>
                 </div>
             </div>
 
             <div id="level-8" class="level scrollable-content">
-                <div class="w-full flex flex-col items-center my-auto py-4">
+                <div class="w-full flex flex-col items-center pt-8 pb-4">
                     <h2 class="romantic-text text-3xl mb-4">Minha Perita...</h2>
                     
                     <div class="w-full bg-gray-900 rounded-lg overflow-hidden border-2 border-[#ff3366] mb-4 relative flex-shrink-0" style="aspect-ratio: 9/16; max-height: 40vh;">
@@ -243,12 +242,12 @@
                     </div>
 
                     <p class="body-text text-xs text-gray-300 italic mb-6 px-2 leading-tight">"Ver você sorrir assim é a minha maior evidência de que eu fiz a escolha certa."</p>
-                    <button onclick="changeLevel(9)" class="w-full bg-[#ff3366] text-white py-3 rounded font-bold">Avançar <i class="fas fa-arrow-right"></i></button>
+                    <button type="button" onclick="changeLevel(9)" class="w-full bg-[#ff3366] text-white py-3 rounded font-bold">Avançar <i class="fas fa-arrow-right"></i></button>
                 </div>
             </div>
 
             <div id="level-9" class="level scrollable-content">
-                <div class="w-full flex flex-col items-center my-auto py-4">
+                <div class="w-full flex flex-col items-center pt-8 pb-4">
                     <i class="fas fa-calendar-check text-5xl mb-6 text-[#00ff41]"></i>
                     <h2 class="text-xl mb-4 font-bold uppercase text-white">Relatório Final</h2>
                     <div class="body-text text-sm sm:text-base text-gray-300 space-y-4 text-justify px-2 leading-relaxed">
@@ -256,19 +255,19 @@
                         <p>Obrigado por existir na minha vida durante todo esse tempo e por finalmente aceitar ter essa data comigo, pela primeira vez, depois de tanto esperar.</p>
                         <p>Eu te amo incondicionalmente, Larissa. E estarei do seu lado enquanto você realiza seu sonho de ser perita criminal.</p>
                     </div>
-                    <button onclick="startFinalCanvas()" class="mt-8 w-full border-2 border-[#00ff41] text-[#00ff41] py-3 rounded font-bold hover:bg-[#00ff41] hover:text-black transition-colors">Concluir Caso</button>
+                    <button type="button" onclick="startFinalCanvas()" class="mt-8 w-full border-2 border-[#00ff41] text-[#00ff41] py-3 rounded font-bold hover:bg-[#00ff41] hover:text-black transition-colors">Concluir Caso</button>
                 </div>
             </div>
 
             <div id="level-gameover" class="level scrollable-content">
-                <div class="w-full flex flex-col items-center my-auto py-4">
+                <div class="w-full flex flex-col items-center pt-8 pb-4">
                     <i class="fas fa-user-lock text-6xl text-red-600 mb-6"></i>
                     <h2 class="text-xl sm:text-2xl mb-4 font-bold text-red-500 uppercase tracking-widest">Acesso Bloqueado</h2>
                     <div class="body-text text-xs sm:text-sm text-gray-300 text-center px-2 leading-relaxed mb-8">
                         <p>Ops... você perdeu todas as tentativas.</p>
                         <p class="mt-4 italic text-gray-400">Respire fundo, tente novamente e com calma. Uma perita tão boa como você não deixa o nervosismo vencer!</p>
                     </div>
-                    <button onclick="restartGame()" class="w-full border-2 border-red-500 text-red-500 py-3 rounded font-bold hover:bg-red-500 hover:text-white transition-colors">Iniciar Nova Perícia</button>
+                    <button type="button" onclick="restartGame()" class="w-full border-2 border-red-500 text-red-500 py-3 rounded font-bold hover:bg-red-500 hover:text-white transition-colors">Iniciar Nova Perícia</button>
                 </div>
             </div>
         </div>
@@ -290,7 +289,7 @@
         function startApp() {
             document.getElementById('start-screen').style.display = 'none';
             audioIntro.play().catch(e => {
-                console.log("Aviso Sênior: O áudio não pôde ser reproduzido. Verifique se o arquivo intro.mp4 está na pasta correta.");
+                console.log("Aviso Sênior: O áudio não pôde ser reproduzido.");
             });
             runIntroSequence();
         }
@@ -321,7 +320,7 @@
         function endIntro() {
             audioIntro.pause();
             audioSuspense.play().catch(e => {
-                console.log("Aviso Sênior: O áudio suspense não pôde ser reproduzido. Verifique o arquivo suspense.mp3.");
+                console.log("Aviso Sênior: O áudio suspense não pôde ser reproduzido.");
             });
             document.getElementById('intro-screen').style.display = 'none';
         }
@@ -330,7 +329,7 @@
             const video = document.getElementById('myVideo');
             const overlay = document.getElementById('videoOverlay');
             video.controls = true; 
-            video.play().catch(e => console.log("O vídeo não pôde ser reproduzido. Verifique o arquivo video.mp4."));
+            video.play().catch(e => console.log("O vídeo não pôde ser reproduzido."));
             overlay.style.display = 'none'; 
         }
 
@@ -340,12 +339,18 @@
         function updateLivesUI() {
             const container = document.getElementById('lives-container');
             let coracoes = '';
-            for(let i=0; i<vidas; i++) coracoes += '❤️';
-            for(let i=vidas; i<3; i++) coracoes += '🖤'; 
+            // Superpoder visual: garante que corações nunca fiquem negativos na renderização
+            let displayVidas = Math.max(0, vidas);
+            
+            for(let i=0; i < displayVidas; i++) coracoes += '❤️';
+            for(let i=displayVidas; i < 3; i++) coracoes += '🖤'; 
             container.innerText = coracoes;
         }
 
         function triggerError(el) {
+            // CLÁUSULA DE GUARDA: Bloqueia o "clique ansioso" infinito
+            if (vidas <= 0) return;
+
             shakeElement(el);
             vidas--;
             updateLivesUI();
@@ -381,6 +386,8 @@
         }
 
         function checkAnswer(resposta, correta, btn) {
+            if (vidas <= 0) return; // Cláusula de Guarda
+
             if (resposta === correta) { changeLevel(currentLevel + 1); } 
             else { triggerError(btn); }
         }
@@ -396,24 +403,44 @@
         }
 
         function shakeElement(el) {
+            if(!el) return;
             el.classList.add('shake-error');
             setTimeout(() => el.classList.remove('shake-error'), 400);
         }
 
         function checkL1() {
-            const val = document.getElementById('l1-input').value;
-            if (val === '0305' || val === '305' || val.includes('0305')) changeLevel(2);
-            else triggerError(document.getElementById('l1-input'));
+            if (vidas <= 0) return; // Cláusula de Guarda
+
+            const inputEl = document.getElementById('l1-input');
+            
+            // SUPERPODER DE VALIDAÇÃO (REGEX): Pega a string inteira e arranca qualquer coisa 
+            // que não seja número (ex: transforma "03/05" em "0305" ou "3 de maio" em "3")
+            const val = inputEl.value.replace(/\D/g, '');
+            
+            if (val === '0305' || val === '305' || val.includes('0305') || val === '03052026' || val === '030526') {
+                inputEl.blur(); // Abaixa o teclado no celular
+                changeLevel(2);
+            } else { 
+                triggerError(inputEl); 
+            }
         }
 
         function checkL5() {
-            const val = document.getElementById('l5-input').value.toLowerCase().trim();
+            if (vidas <= 0) return; // Cláusula de Guarda
+
+            const inputEl = document.getElementById('l5-input');
+            const val = inputEl.value.toLowerCase().trim();
             if (val.includes('larissa') || val === 'eu' || val.includes('mulher') || val.includes('lari')) {
+                inputEl.blur(); // Abaixa o teclado no celular
                 changeLevel(6);
-            } else { triggerError(document.getElementById('l5-input')); }
+            } else { 
+                triggerError(inputEl); 
+            }
         }
 
         function findKey(isCorrect, folderDiv) {
+            if (vidas <= 0) return; // Cláusula de Guarda
+
             if(isCorrect) {
                 document.getElementById('search-area').style.display = 'none';
                 document.getElementById('l6-instructions').innerText = "Excelente! Arraste a chave até a fechadura.";
