@@ -20,7 +20,6 @@
         
         .level { display: none; width: 100%; height: 100%; flex-direction: column; align-items: center; justify-content: flex-start; text-align: center; }
         
-        /* O SUPERPODER: O !important garante que o JS tenha controle absoluto sobre quem aparece */
         .active-level { display: flex !important; animation: fadeIn 0.5s ease-out; }
         
         @keyframes fadeIn { from { opacity: 0; transform: scale(0.95); } to { opacity: 1; transform: scale(1); } }
@@ -48,7 +47,6 @@
         #canvas-container { position: absolute; top: 0; left: 0; width: 100%; height: 100%; z-index: 0; background: #0a0005; }
         #final-text { position: absolute; bottom: 10%; width: 100%; z-index: 10; opacity: 0; transition: opacity 2s; pointer-events: none;}
 
-        /* CORREÇÃO DO BUG IMORTAL: Removido o display:flex fixo daqui. Agora ele obedece ao .level e ao .active-level corretamente. */
         .scrollable-content { overflow-y: auto; width: 100%; height: 100%; padding-bottom: 20px;}
         .scrollable-content::-webkit-scrollbar { width: 0px; background: transparent; }
     </style>
@@ -63,6 +61,12 @@
     <audio id="audio-suspense" loop preload="auto">
         <source src="./suspense.mpeg" type="audio/mpeg">
         <source src="./suspense.mp3" type="audio/mpeg">
+    </audio>
+
+    <!-- O NOVO ÁUDIO DE AMOR PARA O FINAL -->
+    <audio id="audio-love" loop preload="auto">
+        <source src="./love.mpeg" type="audio/mpeg">
+        <source src="./love.mp3" type="audio/mpeg">
     </audio>
 
     <!-- TELA INICIAL -->
@@ -81,13 +85,11 @@
         <h2 id="intro-title" class="text-3xl text-red-600 font-bold tracking-widest typewriter-text mb-4 mt-6 opacity-0 transition-opacity duration-1000">DOSSIÊ DO SUSPEITO</h2>
 
         <div class="relative w-full max-w-sm flex-1 flex flex-col items-center justify-center min-h-[400px]">
-            <!-- Polaroid 1 -->
             <div id="polaroid-1" class="polaroid w-32 sm:w-40 absolute top-4 left-0 z-10 hidden">
                 <img src="./foto1.jpg" alt="Larissa Foto 1" onerror="this.onerror=null; this.src='./foto1.jpeg';">
                 <div class="polaroid-caption">Alvo Confirmado</div>
             </div>
 
-            <!-- Polaroid 2 -->
             <div id="polaroid-2" class="polaroid w-36 sm:w-48 absolute top-1/3 right-0 z-20 hidden" style="transform: rotate(8deg);">
                 <img src="./foto2.jpg" alt="Larissa Foto 2" onerror="this.onerror=null; this.src='./foto2.jpeg';">
                 <div class="polaroid-caption">Evidência Fissurada</div>
@@ -285,6 +287,7 @@
     <script>
         const audioIntro = document.getElementById('audio-intro');
         const audioSuspense = document.getElementById('audio-suspense');
+        const audioLove = document.getElementById('audio-love');
 
         function startApp() {
             document.getElementById('start-screen').style.display = 'none';
@@ -339,7 +342,6 @@
         function updateLivesUI() {
             const container = document.getElementById('lives-container');
             let coracoes = '';
-            // Superpoder visual: garante que corações nunca fiquem negativos na renderização
             let displayVidas = Math.max(0, vidas);
             
             for(let i=0; i < displayVidas; i++) coracoes += '❤️';
@@ -348,7 +350,6 @@
         }
 
         function triggerError(el) {
-            // CLÁUSULA DE GUARDA: Bloqueia o "clique ansioso" infinito
             if (vidas <= 0) return;
 
             shakeElement(el);
@@ -386,7 +387,7 @@
         }
 
         function checkAnswer(resposta, correta, btn) {
-            if (vidas <= 0) return; // Cláusula de Guarda
+            if (vidas <= 0) return; 
 
             if (resposta === correta) { changeLevel(currentLevel + 1); } 
             else { triggerError(btn); }
@@ -409,16 +410,13 @@
         }
 
         function checkL1() {
-            if (vidas <= 0) return; // Cláusula de Guarda
+            if (vidas <= 0) return; 
 
             const inputEl = document.getElementById('l1-input');
-            
-            // SUPERPODER DE VALIDAÇÃO (REGEX): Pega a string inteira e arranca qualquer coisa 
-            // que não seja número (ex: transforma "03/05" em "0305" ou "3 de maio" em "3")
             const val = inputEl.value.replace(/\D/g, '');
             
             if (val === '0305' || val === '305' || val.includes('0305') || val === '03052026' || val === '030526') {
-                inputEl.blur(); // Abaixa o teclado no celular
+                inputEl.blur(); 
                 changeLevel(2);
             } else { 
                 triggerError(inputEl); 
@@ -426,12 +424,12 @@
         }
 
         function checkL5() {
-            if (vidas <= 0) return; // Cláusula de Guarda
+            if (vidas <= 0) return; 
 
             const inputEl = document.getElementById('l5-input');
             const val = inputEl.value.toLowerCase().trim();
             if (val.includes('larissa') || val === 'eu' || val.includes('mulher') || val.includes('lari')) {
-                inputEl.blur(); // Abaixa o teclado no celular
+                inputEl.blur(); 
                 changeLevel(6);
             } else { 
                 triggerError(inputEl); 
@@ -439,7 +437,7 @@
         }
 
         function findKey(isCorrect, folderDiv) {
-            if (vidas <= 0) return; // Cláusula de Guarda
+            if (vidas <= 0) return; 
 
             if(isCorrect) {
                 document.getElementById('search-area').style.display = 'none';
@@ -514,7 +512,9 @@
         }
 
         function startFinalCanvas() {
+            // A Troca Triunfal de Trilha Sonora
             audioSuspense.pause();
+            audioLove.play().catch(e => console.log("Aviso Sênior: Áudio love bloqueado."));
 
             changeLevel(10);
             const canvas = document.getElementById('canvas-container');
@@ -524,6 +524,8 @@
             canvas.height = window.innerHeight;
 
             let particles = [];
+            let miniHearts = []; // Nosso Emissor de Partículas Românticas
+            let isTextPhase = false;
 
             function getHeartPoint(t, scale) {
                 const x = 16 * Math.pow(Math.sin(t), 3);
@@ -564,18 +566,65 @@
                 }
             }
 
+            // A Nova Classe da Fábrica de Mini Corações
+            class MiniHeart {
+                constructor() {
+                    // Nascem aleatoriamente espalhados abaixo do nome
+                    this.x = canvas.width / 2 + (Math.random() - 0.5) * 250; 
+                    this.y = canvas.height / 2 + 30 + Math.random() * 50; 
+                    this.size = Math.random() * 15 + 10; // Tamanhos variados
+                    this.vy = Math.random() * -1 - 0.5; // Sobem levemente (gravidade invertida)
+                    this.vx = (Math.random() - 0.5) * 0.5; // Balanço horizontal
+                    this.alpha = 1;
+                }
+                update() {
+                    this.x += this.vx;
+                    this.y += this.vy;
+                    this.alpha -= 0.015; // Velocidade que eles somem (bolha estourando)
+                }
+                draw() {
+                    ctx.save();
+                    ctx.globalAlpha = Math.max(0, this.alpha);
+                    ctx.font = `${this.size}px Arial`;
+                    ctx.fillText('❤️', this.x, this.y);
+                    ctx.restore();
+                }
+            }
+
             for(let i = 0; i < 400; i++) particles.push(new Particle());
 
             function animate() {
                 ctx.fillStyle = 'rgba(10, 0, 5, 0.2)';
                 ctx.fillRect(0, 0, canvas.width, canvas.height);
+                
+                // Desenha a poeira original (Coração Gigante -> LARISSA)
                 particles.forEach(p => { p.update(); p.draw(); });
+
+                // O Motor dos Mini Corações entra em ação quando o nome surge
+                if(isTextPhase) {
+                    // Chance de 15% de cuspir um novo coração a cada frame (Frequência perfeita)
+                    if(Math.random() < 0.15) {
+                        miniHearts.push(new MiniHeart());
+                    }
+                    
+                    // Desenha e limpa os que já sumiram da tela
+                    for(let i = miniHearts.length - 1; i >= 0; i--) {
+                        miniHearts[i].update();
+                        miniHearts[i].draw();
+                        if(miniHearts[i].alpha <= 0) {
+                            miniHearts.splice(i, 1);
+                        }
+                    }
+                }
+
                 requestAnimationFrame(animate);
             }
 
             animate();
 
             setTimeout(() => {
+                isTextPhase = true; // Ativa a "Fábrica" de Mini Corações
+
                 const textCanvas = document.createElement('canvas');
                 textCanvas.width = canvas.width;
                 textCanvas.height = canvas.height;
